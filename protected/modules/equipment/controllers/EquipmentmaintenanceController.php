@@ -48,6 +48,41 @@ class EquipmentmaintenanceController extends Controller
 	 */
 	public function actionView($id)
 	{
+
+		if($_FILES['import_path2']['tmp_name'])
+		{
+
+			$target_dir =Yii::getPathOfAlias('webroot').'/upload/';
+			$newname = basename(date("Y-m-d").'-'.rand(1,100).'-'.$_FILES["import_path2"]["name"]);
+			$target_file = $target_dir . $newname;
+			// print_r($_FILES["import_path"]);
+			// exit();
+			//$target_file = Yii::app()->baseUrl.'/upload/'.basename($_FILES["import_path"]["tmp_name"]);
+			if($_FILES["import_path2"]["type"]==="application/pdf"){
+				if(move_uploaded_file($_FILES["import_path2"]["tmp_name"], $target_file)){
+					$id = $_POST['theid'];
+					//$maintenancedata =$newname;
+					$tempmodel = Equipmentmaintenance::model()->findByPk($id);
+					$tempmodel->maintenancedata = $newname;
+					$tempmodel->isdone=1;
+					if($tempmodel->save()){
+						$this->redirect(Yii::app()->createUrl('equipment/equipmentmaintenance/view',array(
+							'id'=>$id,
+						)));
+					}
+				}
+				else{
+					echo $_FILES['import_path2'];
+					//exit();
+					throw new CHttpException(500,$_FILES["import_path2"]);
+				}
+			}
+			else{
+				Yii::app()->user->setFlash('error','The file uploaded is not of type PDF!');
+			}
+		}
+
+
 		$this->render('view',array(
 			'model'=>$this->loadModel($id),
 		));
@@ -57,8 +92,9 @@ class EquipmentmaintenanceController extends Controller
 	 * Creates a new model.
 	 * If creation is successful, the browser will be redirected to the 'view' page.
 	 */
-	public function actionCreate()
+	public function actionCreate($item = 0)
 	{
+		//echo $item; exit();
 		$model=new Equipmentmaintenance;
 
 		// Uncomment the following line if AJAX validation is needed
@@ -67,12 +103,20 @@ class EquipmentmaintenanceController extends Controller
 		if(isset($_POST['Equipmentmaintenance']))
 		{
 			$model->attributes=$_POST['Equipmentmaintenance'];
-			if($model->save())
-				$this->redirect(array('view','id'=>$model->ID));
+			$model->user_id = Yii::app()->user->id;
+			if($model->save()){
+				$equipment = Equipment::model()->findByAttributes(array("equipmentID"=>$model->equipmentID));
+				$this->redirect(array('equipment/view','id'=>$equipment->ID));
+				//$this->redirect(Yii::app()->request->getUrlReferrer());
+				// echo "  <script type='text/javascript'>
+    //                                             self.history.go(-2);
+    //                     </script>";
+			}
 		}
 
 		$this->render('create',array(
 			'model'=>$model,
+			'item'=>$item,
 		));
 	}
 

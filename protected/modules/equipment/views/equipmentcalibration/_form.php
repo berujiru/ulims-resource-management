@@ -20,33 +20,28 @@
 	<?php echo $form->errorSummary($model); ?>
 
 	<div class="row">
-		<?php echo $form->labelEx($model,'user_id'); ?>
-		<?php echo $form->textField($model,'user_id'); ?>
-		<?php echo $form->error($model,'user_id'); ?>
-	</div>
-
-	<div class="row">
 		<?php echo $form->labelEx($model,'equipmentID'); ?>
-		<?php echo $form->textField($model,'equipmentID',array('size'=>60,'maxlength'=>200)); ?>
+		<?php echo $form->dropDownList($model,'equipmentID',
+			 CHtml::listData(Equipment::model()->findAll(),'equipmentID','name'),array('options' => array($item=>array('selected'=>true)))); ?>
 		<?php echo $form->error($model,'equipmentID'); ?>
 	</div>
 
 	<div class="row">
 		<?php echo $form->labelEx($model,'date'); ?>
-		<?php echo $form->textField($model,'date'); ?>
+		<?php $this->widget('zii.widgets.jui.CJuiDatePicker', array(
+						'model'=>$model,
+						'attribute'=>'date',
+						'value'=>date('yy-mm-dd'),
+						
+						// additional javascript options for the date picker plugin
+						
+						'options' => array(
+							'showAnim' => 'fold',
+							'dateFormat'=>'yy-mm-dd',
+							),
+						
+					));?>
 		<?php echo $form->error($model,'date'); ?>
-	</div>
-
-	<div class="row">
-		<?php echo $form->labelEx($model,'isdone'); ?>
-		<?php echo $form->textField($model,'isdone'); ?>
-		<?php echo $form->error($model,'isdone'); ?>
-	</div>
-
-	<div class="row">
-		<?php echo $form->labelEx($model,'certificate'); ?>
-		<?php echo $form->textArea($model,'certificate',array('rows'=>6, 'cols'=>50)); ?>
-		<?php echo $form->error($model,'certificate'); ?>
 	</div>
 
 	<div class="row buttons">

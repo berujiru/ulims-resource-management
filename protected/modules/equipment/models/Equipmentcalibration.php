@@ -29,7 +29,7 @@ class Equipmentcalibration extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('user_id, equipmentID, date, isdone', 'required'),
+			array('equipmentID, date', 'required'),
 			array('user_id, isdone', 'numerical', 'integerOnly'=>true),
 			array('equipmentID', 'length', 'max'=>200),
 			array('certificate', 'safe'),
@@ -60,7 +60,7 @@ class Equipmentcalibration extends CActiveRecord
 			'user_id' => 'User',
 			'equipmentID' => 'Equipment',
 			'date' => 'Date',
-			'isdone' => 'Isdone',
+			'isdone' => 'Status',
 			'certificate' => 'Certificate',
 		);
 	}
@@ -113,4 +113,38 @@ class Equipmentcalibration extends CActiveRecord
 	{
 		return parent::model($className);
 	}
+
+	public function getColor() {
+        
+        $statuscolor='white';
+        switch (strtolower($this->isdone)){
+            case "0":
+            	//check the date if before or after the isdone value
+            	if(date('Y-m-d') > $this->date)
+                	$statuscolor='orange';
+                else
+                	$statuscolor='yellow';
+                break;
+            case "1":
+                $statuscolor='green';
+                break;
+        }
+        return $statuscolor;
+        
+    }
+
+    public function getstatus() {
+        
+        switch (strtolower($this->isdone)){
+            case "0":
+            	//check the date if before or after the isdone value
+            	return "Not Yet";
+                break;
+            case "1":
+                return "Done";
+                break;
+        }
+         
+        
+    }
 }

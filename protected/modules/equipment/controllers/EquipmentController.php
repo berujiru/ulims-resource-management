@@ -41,19 +41,89 @@ class EquipmentController extends Controller
 			),
 		);
 	}
-
 	
-
-	
-
 	/**
 	 * Displays a particular model.
 	 * @param integer $id the ID of the model to be displayed
 	 */
 	public function actionView($id)
 	{
+		if($_FILES['import_path']['tmp_name'])
+		{
+
+			$target_dir =Yii::getPathOfAlias('webroot').'/upload/';
+			$newname = basename(date("Y-m-d").'-'.$_FILES["import_path"]["name"]);
+			$target_file = $target_dir . $newname;
+			// print_r($_FILES["import_path"]);
+			// exit();
+			//$target_file = Yii::app()->baseUrl.'/upload/'.basename($_FILES["import_path"]["tmp_name"]);
+			if($_FILES["import_path"]["type"]==="application/pdf"){
+				if(move_uploaded_file($_FILES["import_path"]["tmp_name"], $target_file)){
+					$id = $_POST['theid'];
+					$maintenancedata =$newname;
+					$tempmodel = Equipmentmaintenance::model()->findByPk($id);
+					$tempmodel->maintenancedata = $maintenancedata;
+					$tempmodel->isdone=1;
+					if($tempmodel->save()){
+						$this->redirect(Yii::app()->createUrl('equipment/equipmentmaintenance/view',array(
+							'id'=>$id,
+						)));
+					}
+				}
+				else{
+					echo $_FILES['import_path'];
+					//exit();
+					throw new CHttpException(500,$_FILES["import_path"]);
+				}
+			}
+			else{
+				Yii::app()->user->setFlash('error','The file uploaded is not of type PDF!');
+			}
+		}
+
+		if($_FILES['import_path2']['tmp_name'])
+		{
+			//echo file_get_contents($_FILES['import_path']['tmp_name']);
+			$id = $_POST['theid'];
+			$calibrationdata = file_get_contents($_FILES['import_path2']['tmp_name']);
+			$tempmodel = Equipmentcalibration::model()->findByPk($id);
+			$tempmodel->certificate = $calibrationdata;
+			$tempmodel->isdone=1;
+			if($tempmodel->save()){
+				$this->redirect(Yii::app()->createUrl('equipment/equipmentcalibration/view',array(
+					//'model'=>$tempmodel,
+					'id'=>$id,
+				)));
+			}
+
+		}
+
+
+		
+		$model = $this->loadModel($id);
+		$maintenance=new CActiveDataProvider('Equipmentmaintenance', array(
+			'criteria'=>array(
+		        'condition'=>'equipmentID='.$model->equipmentID/*.' and isdone = "0"'*/,
+		        'order'=>'date DESC'
+		    ),
+		    'pagination'=>array(
+		        'pageSize'=>5,
+		    ),
+		));
+		$calibration=new CActiveDataProvider('Equipmentcalibration', array(
+			'criteria'=>array(
+		        'condition'=>'equipmentID='.$model->equipmentID/*.' and isdone = "0"'*/,
+		        'order'=>'date DESC'
+		    ),
+		    'pagination'=>array(
+		        'pageSize'=>5,
+		    ),
+		));
+
 		$this->render('view',array(
-			'model'=>$this->loadModel($id),
+			'model'=>$model,
+			'maintenance'=>$maintenance,
+			'calibration'=>$calibration,
 		));
 	}
 
@@ -377,5 +447,48 @@ class EquipmentController extends Controller
 		$file = Yii::getPathOfAlias('webroot').'/upload/import.txt';
 		file_put_contents($file, serialize(array()));
 		$this->redirect('create');
+	}
+
+
+	public function actionViewMaintenanceRecord(){
+		if(isset($_POST['id']))
+			$requestId=$_POST['id'];
+
+		$maintenance=Equipmentmaintenance::model()->findByPk($requestId);
+		// echo CJSON::encode("Date :' ".$maintenance->date."' and Type :".$maintenance->type);
+		$datum = null;
+		if($maintenance->type === "0")
+			$datum ="Date : ".$maintenance->date." and Type : Standard Maintenance";
+		else
+			$datum = "Date : ".$maintenance->date." and Type : Preventive / Corrective Maintenance";
+
+		echo json_encode(array("title"=>$datum,"data"=>nl2br($maintenance->maintenancedata)));
+		//exit();
+	}
+
+	public function actionViewCalibrationRecord($id){
+		
+		// if(isset($_POST['id']))
+		// 	$requestId=$_POST['id'];
+
+		//echo $id; exit();
+
+		// $calibration=Equipmentcalibration::model()->findByPk($requestId);
+		$calibration=Equipmentcalibration::model()->findByPk($id);
+		
+			if($calibration)
+			 	echo $this->renderPartial('_popupload', array('pdf'=>$calibration->certificate));
+			 else
+			 	echo $this->renderPartial('_popupload', array('pdf'=>NULL));
+
+		//$basePath=Yii::app()->baseUrl.'/upload/';
+
+		//echo $basePath.$calibration->certificate;
+		
+	}
+
+	public function actionLoadFilterdtr(){
+
+			$this->renderPartial('_popupload', array('model'=>$model)); 
 	}
 }

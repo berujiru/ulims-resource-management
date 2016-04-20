@@ -60,6 +60,7 @@ class Equipment extends CActiveRecord
 		return array(
 			'labaccess'=>array(self::BELONGS_TO,'Lab','lab'),
 			'classification'=>array(self::BELONGS_TO,'Equipmentclassification','classificationID'),
+			'equipstatus'=>array(self::BELONGS_TO,'Equipmentstatus','status'),
 		);
 	}
 
